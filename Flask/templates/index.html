@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-datepicker@1.9.0/dist/css/bootstrap-datepicker.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap-datepicker@1.9.0/dist/js/bootstrap-datepicker.min.js"></script>
+    <script src="https://code.jquery.com/ui/1.13.0/jquery-ui.min.js"></script>
+
+    <!-- Add Bootstrap CSS -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <!-- Add custom CSS for additional styling -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+
+</head>
+
+<body >
+    <h1 style="text-align: center; margin-top: 2%;">Payment Gateway</h1>
+    <p>Hello {{username}}</p>
+    <p>Reservation for lounge {{lounge}}</p>
+
+    <div class="pricing-wrapper clearfix" style=" display: flex; justify-content: center;">
+
+
+        <div class="pricing-table" style="margin-right: 10%;">
+          <h3 class="pricing-title">Standard</h3>
+          <div class="price" style="color: white;">Free</div>
+    
+          <ul class="table-list">
+            <li> <span>1 </span> Ad <span>Each 10 min</span></li>
+            <li> <span>100</span> search results <span>per hour</span></li>
+          </ul>
+    
+          <div class="table-buy">
+            <p>Free</p>
+    
+          </div>
+        </div>
+    
+        <div class="pricing-table" style="margin-left: 10%;">
+          <h3 class="pricing-title">Premium</h3>
+          <div class="price" style="color: white;">$0.50<sup>/ mo</sup></div>
+    
+          <ul class="table-list">
+            <li> <span>No </span> Ads</li>
+            <li> <span>Unlimited</span> search results</li>
+          </ul>
+    
+    
+          <div class="table-buy">
+            <p>$0.50<sup>/ mo</sup></p>
+    
+          </div>
+          <div class="container">
+            <form action="/charge" method="post" style="margin-bottom: 5%;">
+
+        
+                <script src="https://checkout.stripe.com/checkout.js" class="stripe-button"
+                        data-key="{{ key }}"
+                        data-description="Subscription Fee"
+                        data-amount="50"
+                        data-locale="auto">
+                </script>
+            </form>
+        </div>
+        </div>
+      </div>
+    
+
+</body>
+</html>
