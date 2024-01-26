@@ -1,5 +1,4 @@
 from flask import Flask, request, jsonify , render_template
-from geopy.geocoders import Nominatim
 from utils import db_connector
 import stripe
 import json
@@ -28,45 +27,30 @@ stripe.api_key = stripe_keys['secret_key']
 app = Flask(__name__)
 server_address = 'https://iegapp.pythonanywhere.com'
 
-def get_city_info(city_name):
-    geolocator = Nominatim(user_agent="city_info_app")
 
 
+# def purchase_lounge(card_num, exp_year, exp_month, cv2, amount, lounge):
 
-    try:
-        location = geolocator.geocode(city_name)
-        if location:
-            city_info = {
-                "city": city_name.capitalize(),
-                "latitude": location.latitude,
-                "longitude": location.longitude,
-            }
-            return city_info
-    except Exception as e:
-        return {"error": str(e)}
+#     data = stripe.Token.create(
+#                 card={
+#                     "number": str(card_num),
+#                     "exp_month": int(exp_month),
+#                     "exp_year": int(exp_year),
+#                     "cvc": str(cv2),
+#                 })
 
-def purchase_lounge(card_num, exp_year, exp_month, cv2, amount, lounge):
+#     card_token = data['id']
+#     # Create a PaymentIntent with the token
+#     payment = stripe.Charge.create(
+#                 amount= int(amount),                  # convert amount to cents
+#                 currency='usd',
+#                 description='Example charge',
+#                 source=card_token,
+#                 )
 
-    data = stripe.Token.create(
-                card={
-                    "number": str(card_num),
-                    "exp_month": int(exp_month),
-                    "exp_year": int(exp_year),
-                    "cvc": str(cv2),
-                })
+#     payment_check = payment['paid']    # return True for successfull payment
 
-    card_token = data['id']
-    # Create a PaymentIntent with the token
-    payment = stripe.Charge.create(
-                amount= int(amount),                  # convert amount to cents
-                currency='usd',
-                description='Example charge',
-                source=card_token,
-                )
-
-    payment_check = payment['paid']    # return True for successfull payment
-
-    return payment_check
+#     return payment_check
 
 
 
@@ -75,47 +59,10 @@ def index():
     return jsonify({'data': 'Hi'})
 
 
-@app.route('/geo/', methods=['POST'])
-def lang_lat_return():
-    city_name = request.form['city_name']
-    city_info = get_city_info(city_name)
-    if "error" in city_info:
-        return jsonify({"error": "City not found"})
-    else:
-
-        db_info = db_connector(fetch=True, name='Joe Elm', email='JE@gmail.com', lounge=city_name)
-        city_info['db_info'] = db_info
-
-        return jsonify(city_info)
-
-
-# @app.route('/lounge_reserve/')
-# def lounge_reserve():
-#     lounge_param = request.args.get('lounge')
-#     username_param = request.args.get('username')
 
 
 
-#     return render_template('index.html', key= stripe_keys['publishable_key'], username= username_param, lounge= lounge_param)
 
-# @app.route('/charge', methods=['POST'])
-# def charge():
-#     #in cents
-#     amount = 50
-
-#     customer = stripe.Customer.create(
-#         email='',
-#         source=request.form['stripeToken']
-#     )
-
-#     charge = stripe.Charge.create(
-#         customer=customer.id,
-#         amount=amount,
-#         currency='cad',
-#         description='payment'
-#     )
-
-#     return render_template('charge.html', amount=amount)
 
 
 @app.route('/get_link', methods = ['GET', 'POST'])
@@ -165,16 +112,16 @@ def get_link():
         customer_email = username,
         invoice_creation= {
                     "enabled": True
-                    #,
-                    #"invoice_data": {
-                    #   "account_tax_ids": None,
-                    #   "custom_fields": None,
-                    #   "description": f'Access Purchase for Lounge {item} on {from_date}.',
-                    #   "footer": 'Lounge Atlas powered by IEG',
-                    #   "issuer": 'IEG America',
-                    #   "metadata": {},
-                    #   "rendering_options": None
-                    # }
+                    ,
+                    "invoice_data": {
+                      "account_tax_ids": None,
+                      "custom_fields": None,
+                      "description": f'Access Purchase for Lounge {item} on {from_date}.',
+                      "footer": 'Lounge Atlas powered by IEG',
+                    #   "issuer": {},
+                      "metadata": {},
+                      "rendering_options": None
+                    }
                   }
     )
 
@@ -248,15 +195,21 @@ def webhook():
 
     elif event['type'] == 'checkout.session.completed':
       session = event['data']['object']
+    #   session_id = session['id']
+
+      invoice = stripe.Invoice.retrieve(session['invoice'])
+      invoice_pdf_link = invoice['invoice_pdf']
+
       data = session['metadata']
-      
+
+
       ######confirmation email#####
 
       customer_name = "Jack Morales"
       item_name = data['item']
-      amount = data['price']/100
+      amount = float(data['price'])/100
       customer_email = data['username']
-      send_invoice_email(customer_name, item_name, amount, customer_email)
+      send_invoice_email(customer_name, item_name, amount, customer_email, invoice_pdf_link)
       ############################
 
       with open('example.txt','w') as file:
