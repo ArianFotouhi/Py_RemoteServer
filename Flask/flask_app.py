@@ -29,39 +29,9 @@ server_address = 'https://iegapp.pythonanywhere.com'
 
 
 
-# def purchase_lounge(card_num, exp_year, exp_month, cv2, amount, lounge):
-
-#     data = stripe.Token.create(
-#                 card={
-#                     "number": str(card_num),
-#                     "exp_month": int(exp_month),
-#                     "exp_year": int(exp_year),
-#                     "cvc": str(cv2),
-#                 })
-
-#     card_token = data['id']
-#     # Create a PaymentIntent with the token
-#     payment = stripe.Charge.create(
-#                 amount= int(amount),                  # convert amount to cents
-#                 currency='usd',
-#                 description='Example charge',
-#                 source=card_token,
-#                 )
-
-#     payment_check = payment['paid']    # return True for successfull payment
-
-#     return payment_check
-
-
-
 @app.route('/')
 def index():
     return jsonify({'data': 'Hi'})
-
-
-
-
-
 
 
 
@@ -70,6 +40,10 @@ def get_link():
     # Retrieve data from the request's JSON payload
     data = request.json
     username = data.get('username')
+    phone_code = data.get('phone_code')
+    phone_number = data.get('phone_number')
+    first_name = data.get('first_name')
+    last_name = data.get('last_name')
     lounge_id = data.get('lounge_id')
     from_date = data.get('from_date')
     to_date = data.get('to_date')
@@ -86,6 +60,10 @@ def get_link():
 
     metadata = {
             'username': username,
+            'phone_code': phone_code,
+            'phone_number': phone_number,
+            'first_name': first_name,
+            'last_name': last_name,
             'lounge_id': lounge_id,
             'from_date': from_date,
             'to_date': to_date,
@@ -205,10 +183,11 @@ def webhook():
 
       ######confirmation email#####
 
-      customer_name = "Jack Morales"
+      customer_name = data['first_name'] + ' ' + data['last_name']
       item_name = data['item']
       amount = float(data['price'])/100
       customer_email = data['username']
+
       send_invoice_email(customer_name, item_name, amount, customer_email, invoice_pdf_link)
       ############################
 
